@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timezone Converter — Hijau Lembut v4</title>
+  <link rel="manifest" href="manifest.webmanifest">
+<style>
+    :root {
+      --bg:#f3faf6; --card:#ffffff; --muted:#5b6b5b; --text:#0b2b16; --accent:#2f9e5f;
+      --glass: rgba(47,158,95,0.06); --shadow: 0 8px 30px rgba(16,24,18,0.06);
+      --border: rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] {
+      --bg:#0e1a13; --card:#142419; --muted:#c5e7d4; --text:#e6f6ea; --accent:#2fb376;
+      --glass: rgba(47,158,95,0.18); --shadow: 0 8px 30px rgba(0,0,0,0.6);
+      --border: rgba(255,255,255,0.1);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:920px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{font-size:18px;margin:0}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:14px}
+    @media (max-width:820px){ .grid{grid-template-columns:1fr} }
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,button{font-size:14px}
+    .row{display:flex;gap:8px;align-items:center}
+    input[type=time], select, input[type=text]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--glass);color:var(--text)}
+    .small{width:120px}
+    .btn{padding:10px 12px;border-radius:10px;border:0;background:var(--accent);color:white;cursor:pointer;font-weight:600;box-shadow:0 3px 8px rgba(47,158,95,0.2)}
+    .btn:hover{opacity:0.92}
+    .ghost{border-radius:10px;padding:9px 10px;cursor:pointer;font-weight:600;transition:all 0.2s ease;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+    [data-theme='light'] .ghost{background:rgba(47,158,95,0.1);color:#0b2b16;border:1px solid rgba(47,158,95,0.25)}
+    [data-theme='light'] .ghost:hover{background:rgba(47,158,95,0.2)}
+    [data-theme='dark'] .ghost{background:rgba(47,158,95,0.25);color:#e8f8ee;border:1px solid rgba(255,255,255,0.15)}
+    [data-theme='dark'] .ghost:hover{background:rgba(47,158,95,0.35)}
+    .result{margin-top:12px;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(47,158,95,0.07),transparent);border:1px solid var(--border)}
+    .big{font-size:22px;font-weight:700;color:#0b2b16}
+    [data-theme='dark'] .big{color:#b6f0cc}
+    .muted{color:var(--muted);font-size:13px}
+    .zones{display:flex;flex-wrap:wrap;gap:6px;max-height:240px;overflow:auto;padding:8px;border-radius:10px;background:var(--glass);border:1px solid var(--border)}
+    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+    code{background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:6px;font-size:13px}
+    [data-theme='dark'] code{background:rgba(255,255,255,0.06);color:#d2f5e1}
+    button:focus, select:focus, input:focus { outline:3px solid rgba(47,158,95,0.25); outline-offset:2px; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app" data-theme="light">
+    <header>
+      <div>
+        <h1>Timezone Converter</h1>
+        <p class="lead">Versi v4 — tombol toggle selalu terlihat di semua mode.</p>
+      </div>
+      <div class="row">
+        <button id="themeToggle" class="ghost" aria-pressed="false">Dark</button>
+      </div>
+    </header>
+    <main class="card">
+      <div class="grid">
+        <section>
+          <div><label for="timeInput">Waktu sumber (24-jam)</label><input id="timeInput" type="time" value="03:57" /></div>
+          <div style="margin-top:10px"><label for="sourceGMT">GMT sumber</label><div class="row"><select id="sourceSelect"></select><input id="sourceGMT" type="text" class="small" placeholder="+7" /></div></div>
+          <div style="margin-top:10px"><label for="targetGMT">GMT tujuan</label><div class="row"><select id="targetSelect"></select><input id="targetGMT" type="text" class="small" placeholder="+1" /></div></div>
+          <div class="row" style="margin-top:12px"><button id="convertBtn" class="btn">Konversi</button><button id="nowBtn" class="ghost">Sekarang</button><button id="swapBtn" class="ghost">Tukar</button><button id="copyBtn" class="ghost">Salin</button></div>
+          <div id="resultBox" class="result" role="status" aria-live="polite">Hasil akan muncul di sini.</div>
+          <div style="margin-top:12px" class="muted">Zona browser terdeteksi: <strong id="detectedTZ">—</strong></div>
+        </section>
+        <aside>
+          <label>Daftar offset cepat</label><div id="zonesList" class="zones"></div>
+          <div style="margin-top:10px"><label>Petunjuk</label><div class="muted">Gunakan tanda <code>+</code> atau <code>-</code> mis. <code>+7</code>, <code>5:30</code>. Klik zone untuk cepat isi.</div></div>
+        </aside>
+      </div>
+      <footer>Versi final hijau lembut v4 — tombol toggle dan teks tampil sempurna di semua mode.</footer>
+    </main>
+  </div>
+  <script>
+    const ZONES=[{off:-12,label:'GMT-12'},{off:-11,label:'GMT-11'},{off:-10,label:'GMT-10'},{off:-9.5,label:'GMT-9:30'},{off:-9,label:'GMT-9'},{off:-8,label:'GMT-8'},{off:-7,label:'GMT-7'},{off:-6,label:'GMT-6'},{off:-5,label:'GMT-5'},{off:-4,label:'GMT-4'},{off:-3,label:'GMT-3'},{off:-2,label:'GMT-2'},{off:-1,label:'GMT-1'},{off:0,label:'GMT+0'},{off:1,label:'GMT+1'},{off:2,label:'GMT+2'},{off:3,label:'GMT+3'},{off:3.5,label:'GMT+3:30'},{off:4,label:'GMT+4'},{off:4.5,label:'GMT+4:30'},{off:5,label:'GMT+5'},{off:5.5,label:'GMT+5:30'},{off:5.75,label:'GMT+5:45'},{off:6,label:'GMT+6'},{off:6.5,label:'GMT+6:30'},{off:7,label:'GMT+7'},{off:8,label:'GMT+8'},{off:9,label:'GMT+9'},{off:9.5,label:'GMT+9:30'},{off:10,label:'GMT+10'},{off:11,label:'GMT+11'},{off:12,label:'GMT+12'},{off:13,label:'GMT+13'},{off:14,label:'GMT+14'}];
+
+    const app=document.getElementById('app'),timeInput=document.getElementById('timeInput'),sourceSelect=document.getElementById('sourceSelect'),targetSelect=document.getElementById('targetSelect'),sourceGMT=document.getElementById('sourceGMT'),targetGMT=document.getElementById('targetGMT'),convertBtn=document.getElementById('convertBtn'),resultBox=document.getElementById('resultBox'),nowBtn=document.getElementById('nowBtn'),swapBtn=document.getElementById('swapBtn'),copyBtn=document.getElementById('copyBtn'),themeToggle=document.getElementById('themeToggle'),zonesList=document.getElementById('zonesList'),detectedTZ=document.getElementById('detectedTZ');
+
+    function offsetToMinutes(o){const s=o<0?-1:1,a=Math.abs(o),h=Math.floor(a),m=Math.round((a-h)*60);return s*(h*60+m)}
+    function fmtTime(t){t=((t%1440)+1440)%1440;const h=Math.floor(t/60),m=t%60;return h.toString().padStart(2,'0')+':'+m.toString().padStart(2,'0')}
+    function parseOffsetStr(s){if(!s)return NaN;s=s.trim();if(s.includes(':')){const sign=s.startsWith('-')?-1:1;const p=s.replace('+','').replace('-','').split(':').map(Number);return sign*(Math.abs(p[0])+p[1]/60)}const n=Number(s.replace(',','.'));if(!Number.isNaN(n))return n;const m=s.match(/([+-]?\d+(?:\.\d+)?)/);return m?Number(m[1]):NaN}
+
+    function populate(){ZONES.forEach(z=>{const o=document.createElement('option');o.value=z.off;o.textContent=z.label;sourceSelect.appendChild(o);const o2=o.cloneNode(true);targetSelect.appendChild(o2);const b=document.createElement('button');b.className='ghost';b.textContent=z.label;b.style.fontSize='13px';b.addEventListener('click',()=>{targetSelect.value=z.off;targetGMT.value=z.off;convert();});zonesList.appendChild(b)});sourceSelect.value='7';sourceGMT.value='+7';targetSelect.value='1';targetGMT.value='+1';}
+
+    function detectTZandFill(){const t=-new Date().getTimezoneOffset(),h=Math.trunc(t/60),m=Math.abs(t%60),off=h+m/60;detectedTZ.textContent=`UTC${h>=0?'+':''}${off}`;if(!sourceGMT.dataset.userChanged){sourceSelect.value=off;sourceGMT.value=(off>=0?'+':'')+String(off).replace('.0','')}}
+
+    function convert(){const ts=timeInput.value;if(!ts){resultBox.textContent='Masukkan waktu sumber.';return}const[hh,mm]=ts.split(':').map(Number),src=parseOffsetStr(sourceGMT.value||sourceSelect.value),tgt=parseOffsetStr(targetGMT.value||targetSelect.value);if(Number.isNaN(src)||Number.isNaN(tgt)){resultBox.textContent='Masukkan GMT sumber dan tujuan yang valid.';return}const ms=hh*60+mm,diff=offsetToMinutes(tgt)-offsetToMinutes(src),mt=ms+diff;let nd=0;if(mt<0)nd=-1;else if(mt>=1440)nd=Math.floor(mt/1440);const adj=fmtTime(mt);const dayMsg=nd===0?'(hari yang sama)':(nd>0?`(+${nd} hari)`: `(${nd} hari sebelumnya)`);resultBox.innerHTML=`<div class='big'>${adj}</div><div class='muted'>${dayMsg}</div>`;}
+
+    convertBtn.onclick=convert;timeInput.oninput=convert;sourceGMT.oninput=()=>{sourceGMT.dataset.userChanged='1';convert();};targetGMT.oninput=convert;sourceSelect.onchange=()=>{sourceGMT.value=sourceSelect.value;convert();};targetSelect.onchange=()=>{targetGMT.value=targetSelect.value;convert();};
+
+    nowBtn.onclick=()=>{const d=new Date();timeInput.value=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');convert();};
+    swapBtn.onclick=()=>{const a=sourceGMT.value;sourceGMT.value=targetGMT.value;targetGMT.value=a;convert();};
+    copyBtn.onclick=()=>{navigator.clipboard.writeText(resultBox.textContent.trim());copyBtn.textContent='Tersalin!';setTimeout(()=>copyBtn.textContent='Salin',1500)};
+
+    themeToggle.onclick=()=>{const dark=app.getAttribute('data-theme')==='dark';app.setAttribute('data-theme',dark?'light':'dark');themeToggle.textContent=dark?'Dark':'Light';themeToggle.setAttribute('aria-pressed',!dark);};
+
+    populate();detectTZandFill();convert();
+if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker registered"))
+        .catch(err => console.error("SW registration failed:", err));
+    }
+  </script>
+</body>
+</html>
